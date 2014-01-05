@@ -4,13 +4,12 @@ import datetime
 
 from django import forms
 
-from django.utils.translation import ugettext_lazy as _
-
+from django.contrib.auth.models import User
 
 from common.forms import DetailForm, ROFormMixin, Select2FormMixin
 
 from .models import (Project, ProjectInfo, ProjectBudget, ProjectDetails,
-    ProjectOpportunities, ProjectFile)
+    ProjectOpportunities, ProjectFile, ProjectStateHistory)
 
 
 class ProjectForm_edit(forms.ModelForm, ROFormMixin):
@@ -53,6 +52,7 @@ class ProjectInfoForm_edit(Select2FormMixin, forms.ModelForm, ROFormMixin):
             self.fields['state'].queryset = self.fields['state'].queryset.active()
 
     class Meta:
+        exclude = ('user',)
         model = ProjectInfo
 
 
@@ -60,6 +60,7 @@ class ProjectInfoForm_view(DetailForm):
     readonly_fields = ('state', 'state_note')
 
     class Meta:
+        exclude = ('user',)
         model = ProjectInfo
 
 
@@ -100,7 +101,7 @@ class ProjectInfoForm_create(Select2FormMixin, forms.ModelForm):
             del self.fields['state_note']
 
     class Meta:
-        exclude = ('project', )
+        exclude = ('project', 'user',)
 
         model = ProjectInfo
 
@@ -196,3 +197,12 @@ class ProjectFileForm_create(forms.ModelForm):
         #widgets = {'project': forms.widgets.HiddenInput}
         model = ProjectFile
 
+
+class ProjectStateHistoryUserForm(forms.ModelForm):
+    class Meta:
+        model = ProjectStateHistory
+
+    def clean_user(self):
+        if not self.cleaned_data['user']:
+            return User()
+        return self.cleaned_data['user']

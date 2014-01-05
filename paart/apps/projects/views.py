@@ -255,9 +255,10 @@ def project_info_edit(request, project_info_pk):
     if request.method == 'POST':
         form = ProjectInfoForm_edit(request.POST, instance=project_info, user=request.user)
         if form.is_valid():
-            form.save()
+            obj = form.save(commit=False)
+            obj.user = request.user
+            obj.save()
             messages.success(request, _(u'Information for project "%s" edited successfully.') % project_info.project)
-
             return HttpResponseRedirect(project_info.get_absolute_url())
     else:
         form = ProjectInfoForm_edit(instance=project_info, user=request.user)
@@ -288,8 +289,10 @@ def project_info_create(request, project_pk):
         if form.is_valid():
             project_info = form.save(commit=False)
             project_info.project = project
+            project_info.user = request.user
             project_info.save()
             form.save_m2m()
+            print 'after save_m2m'
             messages.success(request, _(u'Details for project "%s" saved successfully.') % project)
 
             return HttpResponseRedirect(project_info.get_absolute_url())

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.contrib.auth.models import User
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
@@ -291,9 +292,14 @@ class ProjectInfo(models.Model):
     milestones = models.TextField(verbose_name=_(u'milestones'), help_text=_(u'HELP_TEXT_PROYECTINFO_MILESTONES'))
     state = models.ForeignKey(State, verbose_name=_(u'state'), help_text=_(u'HELP_TEXT_PROJECTINFO_STATE'), null=True, blank=True)
     state_note = models.TextField(verbose_name=_(u'project history'), null=True, blank=True)
+    user = models.ForeignKey(User, verbose_name=_(u'user'), null=True, blank=True)
+
+    def project_state_history(self):
+        return ProjectStateHistory.objects.filter(project=self).order_by('-pk')
 
     def save(self):
         super(ProjectInfo, self).save()
+
         if not self.state:
             try:
                 project_state = State.objects.get(default=True)
@@ -301,10 +307,24 @@ class ProjectInfo(models.Model):
                 pass
             else:
                 self.state = project_state
-            self.save()
+            self.state.save()
+
+        project_state_history = self.project_state_history()
+
+        if not project_state_history or ((self.state != project_state_history[0].state)
+                                         or (self.state_note != project_state_history[0].state_note)):
+
+            new_project_state_history = ProjectStateHistory(
+                project=self,
+                state=self.state,
+                state_note=self.state_note,
+                user=self.user,
+            )
+            #new_project_state_history.save()
+            super(ProjectStateHistory, new_project_state_history).save()
 
     def __unicode__(self):
-        return ugettext(u'project information')
+        return ugettext(u'project information') + ' ' + self.project.label
 
     @models.permalink
     def get_absolute_url(self):
@@ -411,3 +431,18 @@ class ProjectFile(models.Model):
     class Meta:
         verbose_name = _(u'project file')
         verbose_name_plural = _(u'projects files')
+
+
+class ProjectStateHistory(models.Model):
+    project = models.ForeignKey(ProjectInfo, verbose_name=_(u'project detail'))
+    datetime_entered = models.DateTimeField(verbose_name=_(u'date and time entered'), default=lambda: now())
+    state = models.CharField(max_length=128, verbose_name=_(u'state'))
+    state_note = models.TextField(verbose_name=_(u'project history'), null=True, blank=True)
+    user = models.ForeignKey(User, verbose_name=_(u'user'), null=True, blank=True)
+
+    def __unicode__(self):
+        return self.project.project.label + ' - ' + self.state
+
+    class Meta:
+        verbose_name = _(u'project state history')
+        verbose_name_plural = _(u'project state history')

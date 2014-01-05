@@ -3,7 +3,9 @@ from __future__ import absolute_import
 from django.contrib import admin
 
 from .models import (Goal, FiscalYear, Purpose, Classification, Stage, Benefit,
-    Topic, Opportunity, Department, Priority, Methodology, Project, ProjectInfo, State)
+    Topic, Opportunity, Department, Priority, Methodology, Project, ProjectInfo, State, ProjectStateHistory)
+
+from .forms import ProjectStateHistoryUserForm
 
 
 class FiscalYearAdmin(admin.ModelAdmin):
@@ -77,6 +79,14 @@ class StateAdmin(admin.ModelAdmin):
     list_display = ('label', 'enabled', 'default')
 
 
+class ProjectStateHistoryAdmin(admin.ModelAdmin):
+    model = ProjectStateHistory
+    form = ProjectStateHistoryUserForm
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        obj.save()
+
 admin.site.register(FiscalYear, FiscalYearAdmin)
 admin.site.register(Purpose, PurposeAdmin)
 admin.site.register(Classification, ClassificationAdmin)
@@ -91,3 +101,4 @@ admin.site.register(Methodology, MethodologyAdmin)
 admin.site.register(State, StateAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectInfo, ProjectProjectInfoAdmin)
+admin.site.register(ProjectStateHistory, ProjectStateHistoryAdmin)
