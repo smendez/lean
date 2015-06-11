@@ -4,6 +4,7 @@ SIZE_BIG = '32x32'
 DEFAULT_ICON_SET = 'fat_cow'
 ICONSETS_STATIC_DIRECTORY = 'icons'
 
+ACCEPT = 'accept'
 ADD = 'add'
 APPLICATION_FORM = 'application_form'
 APPLICATION_FORM_DELETE = 'application_form_delete'

@@ -10,6 +10,7 @@ class IconSet(IconSetBase):
     directory = 'fat_cow'
     available_sizes = ['32x32', '16x16']
     dictionary = {
+        ACCEPT: 'accept.png',
         ADD: 'add.png',
         APPLICATION_FORM: 'application_form.png',
         APPLICATION_FORM_DELETE: 'application_form_delete.png',
