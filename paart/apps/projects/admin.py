@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from django.contrib import admin
 
 from .models import (Goal, FiscalYear, Purpose, Classification, Stage, Benefit,
-    Topic, Opportunity, Department, Priority, Methodology, Project, ProjectInfo, State)
+    Topic, Opportunity, Department, Priority, Methodology, Project, ProjectInfo, State, TaskState, ProjectTasks)
 
 
 class FiscalYearAdmin(admin.ModelAdmin):
@@ -77,6 +77,20 @@ class StateAdmin(admin.ModelAdmin):
     list_display = ('label', 'enabled', 'default')
 
 
+class TaskStateAdmin(admin.ModelAdmin):
+    model = TaskState
+    list_display = ('label', 'enabled', 'default')
+
+
+class ProjectTasksAdmin(admin.ModelAdmin):
+    model = ProjectTasks
+    list_display = ('project', 'agency', 'title', 'description', 'status', 'due_date', 'completed', 'archive')
+    exclude = ('datetime_created',)
+
+    def agency(self, obj):
+        return obj.project.agency.name
+
+
 admin.site.register(FiscalYear, FiscalYearAdmin)
 admin.site.register(Purpose, PurposeAdmin)
 admin.site.register(Classification, ClassificationAdmin)
@@ -89,5 +103,7 @@ admin.site.register(Priority, PriorityAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Methodology, MethodologyAdmin)
 admin.site.register(State, StateAdmin)
+admin.site.register(TaskState, TaskStateAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectInfo, ProjectProjectInfoAdmin)
+admin.site.register(ProjectTasks, ProjectTasksAdmin)

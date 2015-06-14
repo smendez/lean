@@ -230,6 +230,32 @@ class State(models.Model):
         ordering = ['label']
 
 
+class TaskState(models.Model):
+    label = models.CharField(max_length=128, verbose_name=_(u'label'), unique=True)
+    enabled = models.BooleanField(verbose_name=_(u'enabled'), default=True)
+    default = models.BooleanField(verbose_name=_(u'default'), default=False)
+
+    objects = OmitDisabledManager()
+
+    def __unicode__(self):
+        return self.label
+
+    def save(self):
+        if self.default:
+            try:
+                last_default = TaskState.objects.get(default=True)
+                if self != last_default:
+                    last_default.default = False
+                    last_default.save()
+            except TaskState.DoesNotExist:
+                pass
+        super(TaskState, self).save()
+
+    class Meta:
+        verbose_name = _(u'task state')
+        ordering = ['label']
+
+
 class Project(models.Model):
     datetime_created = models.DateTimeField(verbose_name=_(u'creation date and time'), default=lambda: now())
     agency = models.ForeignKey(Agency, verbose_name=_(u'agency'))
@@ -411,3 +437,22 @@ class ProjectFile(models.Model):
     class Meta:
         verbose_name = _(u'project file')
         verbose_name_plural = _(u'projects files')
+
+
+class ProjectTasks(models.Model):
+    project = models.ForeignKey(Project, verbose_name=_(u'project'))
+    title = models.CharField(max_length=200, verbose_name=_(u'task title'), blank=False, null=False)
+    description = models.TextField(blank=False, null=False)
+    status = models.ForeignKey(TaskState, verbose_name=_(u'task status'), blank=False, null=False)
+    datetime_created = models.DateTimeField(verbose_name=_(u'creation date and time'), default=lambda: now())
+    due_date = models.DateTimeField(blank=True, null=True)
+    completed = models.BooleanField(default=False)
+    datetime_completed = models.DateTimeField(verbose_name=_(u'completed date and time'), blank=True, null=True)
+    archive = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = _(u'project task')
+        verbose_name_plural = _(u'project tasks')
