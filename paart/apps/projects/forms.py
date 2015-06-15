@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from common.forms import DetailForm, ROFormMixin, Select2FormMixin
 
 from .models import (Project, ProjectInfo, ProjectBudget, ProjectDetails,
-    ProjectOpportunities, ProjectFile)
+    ProjectOpportunities, ProjectFile, ProjectTasks)
 
 
 class ProjectForm_edit(forms.ModelForm, ROFormMixin):
@@ -196,3 +196,24 @@ class ProjectFileForm_create(forms.ModelForm):
         #widgets = {'project': forms.widgets.HiddenInput}
         model = ProjectFile
 
+
+class ProjectTasksForm_view(DetailForm):
+    class Meta:
+        exclude = ('datetime_created',)
+        model = ProjectTasks
+
+
+class ProjectTasksForm_edit(forms.ModelForm, ROFormMixin):
+    readonly_fields = ('project',)
+
+    class Meta:
+        exclude = ('datetime_created',)
+        model = ProjectTasks
+
+
+class ProjectTasksForm_create(forms.ModelForm):
+    readonly_fields = ('project',)
+
+    class Meta:
+        exclude = ('datetime_created',)
+        model = ProjectTasks

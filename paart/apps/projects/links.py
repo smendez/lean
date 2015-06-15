@@ -56,4 +56,9 @@ link_agency_project_list = Link(text=_(u'projects'), view='agency_project_list',
 
 link_project_reports_view = Link(text=_(u'report'), view='project_report_view', args='resolved_object.pk', icon=icon_project_reports_view)
 
-link_project_reports_view = Link(text=_(u'Tasks'), view='project_report_view', args='resolved_object.pk', icon=icon_project_tasks_view)
+link_project_tasks_list = Link(text=_(u'tasks'), view='project_tasks_list', args='project.pk', icon=icon_project_tasks_view, children_view_regex=['project_file'])
+link_project_tasks_create = Link(text=_(u'task create'), view='project_tasks_create', args='project.pk', icon=icon_project_tasks_view)
+link_project_task_view = Link(text=_(u'task view'), view='project_task_view', args='resolved_object.pk', icon=icon_project_view)
+link_project_task_edit = Link(text=_(u'task edit'), view='project_task_edit', args='resolved_object.pk', icon=icon_project_edit)
+link_project_task_delete = Link(text=_(u'task delete'), view='project_task_delete', args='resolved_object.pk', icon=icon_project_delete)
+

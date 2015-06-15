@@ -453,6 +453,10 @@ class ProjectTasks(models.Model):
     def __unicode__(self):
         return self.title
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('project_task_view', [self.pk])
+
     class Meta:
         verbose_name = _(u'project task')
         verbose_name_plural = _(u'project tasks')

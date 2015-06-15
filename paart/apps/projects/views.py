@@ -25,12 +25,12 @@ from .forms import (ProjectForm_edit, ProjectForm_view, ProjectForm_create,
     ProjectBudgetForm_view, ProjectBudgetForm_edit, ProjectBudgetForm_create,
     ProjectDetailsForm_view, ProjectDetailsForm_edit, ProjectDetailsForm_create,
     ProjectOpportunitiesForm_view, ProjectOpportunitiesForm_edit, ProjectOpportunitiesForm_create,
-    ProjectFileForm_create)
+    ProjectFileForm_create, ProjectTasksForm_view, ProjectTasksForm_edit, ProjectTasksForm_create)
 from .icons import (icon_project_delete, icon_project_info_delete,
     icon_project_budget_delete, icon_project_details_delete, icon_project_opportunities_delete,
     icon_project_file_delete)
 from .models import (Project, ProjectInfo, ProjectBudget, ProjectDetails,
-    ProjectOpportunities, ProjectFile)
+    ProjectOpportunities, ProjectFile, ProjectTasks)
 from .permissions import (PERMISSION_PROJECT_EDIT, PERMISSION_PROJECT_DELETE,
     PERMISSION_PROJECT_VIEW, PERMISSION_PROJECT_CREATE)
 from .wizards import ProjectCreateWizard
@@ -991,4 +991,153 @@ def project_report_view(request, project_pk):
                                             'project' : project,
                                             })
 
-    
+
+### Tasks
+def project_tasks_list(request, project_pk):
+    project = get_object_or_404(Project, pk=project_pk)
+
+    try:
+        Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_VIEW])
+    except PermissionDenied:
+        AccessEntry.objects.check_access(PERMISSION_PROJECT_VIEW, request.user, project.agency)
+
+    context = {
+        'object_list': project.projecttasks_set.all(),
+        'title': _(u'project tasks'),
+        'project': project,
+        'hide_object': False,
+        'agency': project.agency,
+        'navigation_object_list': [
+            {'object': 'agency'},
+            {'object': 'project'},
+        ],
+    }
+
+    return render_to_response('generic_list.html', context,
+        context_instance=RequestContext(request))
+
+
+def project_task_view(request, project_task_pk):
+    project_task = get_object_or_404(ProjectTasks, pk=project_task_pk)
+
+    try:
+        Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_VIEW])
+    except PermissionDenied:
+        AccessEntry.objects.check_access(PERMISSION_PROJECT_VIEW, request.user, project_task.project.agency)
+
+    form = ProjectTasksForm_view(instance=project_task)
+
+    return render_to_response('generic_detail.html', {
+        'form': form,
+        'agency': project_task.project.agency,
+        'project': project_task.project,
+        'title': _(u'project task: %s for Project %s') % (project_task, project_task.project, ),
+        'navigation_object_list': [
+            {'object': 'agency'},
+            {'object': 'project'},
+        ],
+    }, context_instance=RequestContext(request))
+
+
+def project_task_edit(request, project_task_pk):
+    project_task = get_object_or_404(ProjectTasks, pk=project_task_pk)
+
+    try:
+        Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_EDIT])
+    except PermissionDenied:
+        AccessEntry.objects.check_access(PERMISSION_PROJECT_EDIT, request.user, project_task.project.agency)
+
+    if request.method == 'POST':
+        form = ProjectTasksForm_edit(request.POST, instance=project_task)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _(u'Project task "%s" edited successfully.') % project_task)
+
+            return HttpResponseRedirect(project_task.get_absolute_url())
+    else:
+        form = ProjectTasksForm_edit(instance=project_task)
+
+    return render_to_response('generic_form.html', {
+        'form': form,
+        'project': project_task.project,
+        'title': _(u'edit project task: %s for Project %s') % (project_task, project_task.project, ),
+        'agency': project_task.project.agency,
+        'navigation_object_list': [
+            {'object': 'agency'},
+            {'object': 'project'},
+        ],
+    }, context_instance=RequestContext(request))
+
+
+def project_tasks_create(request, project_pk):
+    project = get_object_or_404(Project, pk=project_pk)
+
+    try:
+        Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_EDIT])
+    except PermissionDenied:
+        AccessEntry.objects.check_access(PERMISSION_PROJECT_EDIT, request.user, project.agency)
+
+    if request.method == 'POST':
+        form = ProjectTasksForm_create(request.POST, initial={'project': project})
+        if form.is_valid():
+            project_task = form.save(commit=False)
+            project_task.project = project
+            project_task.save()
+            messages.success(request, _(u'New task for project "%s" saved successfully.') % project)
+
+            return HttpResponseRedirect(project_task.get_absolute_url())
+    else:
+        form = ProjectTasksForm_create(initial={'project': project})
+
+    return render_to_response('generic_form.html', {
+        'form': form,
+        'project': project,
+        'agency': project.agency,
+        'title': _(u'enter new task for project: %s') % project,
+        'navigation_object_list': [
+            {'object': 'agency'},
+            {'object': 'project'},
+        ],
+    }, context_instance=RequestContext(request))
+
+
+def project_task_delete(request, project_task_pk):
+    project_task = get_object_or_404(ProjectTasks, pk=project_task_pk)
+
+    try:
+        Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_EDIT])
+    except PermissionDenied:
+        AccessEntry.objects.check_access(PERMISSION_PROJECT_EDIT, request.user, project_task.project.agency)
+
+    post_action_redirect = project_task.project.get_absolute_url()
+
+    previous = request.POST.get('previous', request.GET.get('previous', request.META.get('HTTP_REFERER', '/')))
+    next = request.POST.get('next', request.GET.get('next', post_action_redirect if post_action_redirect else request.META.get('HTTP_REFERER', '/')))
+
+    if request.method == 'POST':
+        try:
+            project_task.delete()
+            messages.success(request, _(u'Task for project: %s, deleted successfully.') % project_task.project)
+        except Exception, e:
+            messages.error(request, _(u'Task for project: %(project)s delete error: %(error)s') % {
+                'project': project_task.project, 'error': e})
+
+        return HttpResponseRedirect(next)
+
+    context = {
+        'delete_view': True,
+        'previous': previous,
+        'next': next,
+        'title': _(u'Are you sure you wish to delete the task for project: %s?') % project_task.project,
+        'form_icon': icon_project_info_delete,
+        'project': project_task.project,
+        'project_budget': project_task,
+        'agency': project_task.project.agency,
+        'navigation_object_list': [
+            {'object': 'agency'},
+            {'object': 'project'},
+        ],
+    }
+
+    return render_to_response('generic_confirm.html', context,
+        context_instance=RequestContext(request))
