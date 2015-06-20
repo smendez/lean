@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import mimetypes
 import urllib
@@ -995,6 +995,14 @@ def project_report_view(request, project_pk):
 ### Tasks
 def project_tasks_list(request, project_pk):
     project = get_object_or_404(Project, pk=project_pk)
+    project_tasks = project.projecttasks_set.all()
+    project_tasks_list = project_tasks.filter(archive=False)
+    project_tasks_completed = project_tasks_list.filter(completed=True)
+
+    try:
+        project_task_complete_percent = (project_tasks_completed.count()/project_tasks_list.count())
+    except ZeroDivisionError:
+        project_task_complete_percent = 0
 
     try:
         Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_VIEW])
@@ -1002,11 +1010,13 @@ def project_tasks_list(request, project_pk):
         AccessEntry.objects.check_access(PERMISSION_PROJECT_VIEW, request.user, project.agency)
 
     context = {
-        'object_list': project.projecttasks_set.all(),
+        'object_list': project_tasks_list,
         'title': _(u'project tasks'),
+        'completed': project_task_complete_percent,
         'project': project,
         'hide_object': False,
         'agency': project.agency,
+        'column_name': _(u'Task title'),
         'navigation_object_list': [
             {'object': 'agency'},
             {'object': 'project'},

@@ -457,6 +457,11 @@ class ProjectTasks(models.Model):
     def get_absolute_url(self):
         return ('project_task_view', [self.pk])
 
+    def save(self):
+        if self.completed:
+            self.datetime_completed = now()
+        super(ProjectTasks, self).save()
+
     class Meta:
         verbose_name = _(u'project task')
         verbose_name_plural = _(u'project tasks')

@@ -207,13 +207,13 @@ class ProjectTasksForm_edit(forms.ModelForm, ROFormMixin):
     readonly_fields = ('project',)
 
     class Meta:
-        exclude = ('datetime_created',)
+        exclude = ('datetime_created', 'datetime_completed',)
         model = ProjectTasks
 
 
 class ProjectTasksForm_create(forms.ModelForm):
-    readonly_fields = ('project',)
+    readonly_fields = ('project', 'completed',)
 
     class Meta:
-        exclude = ('datetime_created',)
+        exclude = ('datetime_created', 'datetime_completed',)
         model = ProjectTasks
