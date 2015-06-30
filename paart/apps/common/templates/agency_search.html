@@ -2,7 +2,13 @@
 {% load project_tags %}
 {% load i18n %}
 {% block content %}
+    <h1> {% blocktrans %}Reports{% endblocktrans %}</h1>
+    <div class="content">
+        {% url agency_project_completion_report  as project_complete_report %}
+        <a href="{{ project_complete_report }}">{% blocktrans %}Agencies and project completion{% endblocktrans %}</a>
+    </div>
     <div class="content tc" style="text-align: left; margin-left: 10px;">
+        <h1> {% blocktrans %}Report Search:{% endblocktrans %}</h1>
         <form action="" method="get">
             {{ agency_search_form.as_p }}
             <input type="submit" value={% blocktrans %}Search{% endblocktrans %}>

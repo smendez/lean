@@ -1,10 +1,11 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
+from django.db.models import Avg
 
 from agencies.models import Agency
 from common.managers import OmitDisabledManager
@@ -456,6 +457,16 @@ class ProjectTasks(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('project_task_view', [self.pk])
+
+    def get_percentage_complete(self):
+        try:
+            project_tasks_list = ProjectTasks.objects.filter(project__pk=self.project.pk).filter(archive=False)
+            project_tasks_completed = project_tasks_list.filter(completed=True)
+            project_task_complete_percent = (project_tasks_completed.count()/project_tasks_list.count())
+        except ZeroDivisionError:
+            project_task_complete_percent = 0
+
+        return project_task_complete_percent
 
     def save(self):
         if self.completed:

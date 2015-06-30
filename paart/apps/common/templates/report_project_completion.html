@@ -1,0 +1,69 @@
+{% load i18n %}
+{% load project_tags %}
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+    <head>
+    <style>
+        #table-1 {
+          border: solid thin;
+          border-collapse: collapse;
+        }
+        #table-1 caption {
+          padding-bottom: 0.5em;
+          text-align: left;
+          font-weight: bold;
+        }
+        #table-1 th,
+        #table-1 td {
+          border: solid thin;
+          padding: 0.5rem 2rem;
+        }
+        #table-1 td {
+          white-space: nowrap;
+        }
+        #table-1 th {
+          font-weight: normal;
+        }
+        #table-1 td {
+          border-style: none solid;
+          vertical-align: top;
+        }
+        #table-1 th {
+          padding: 0.2em;
+          vertical-align: middle;
+          text-align: left;
+        }
+
+        body {
+          padding: 1rem;
+        }
+    </style>
+        <title> {% blocktrans %}Project completion report{% endblocktrans %} </title>
+    </head>
+    <body>
+        <h1> {% blocktrans %}Report - Agencies and projects{% endblocktrans %} </h1>
+        <br>
+        {% for key, value in report.items %}
+            <table id="table-1" width="100%"><caption>{{ key }}</caption>
+                <col width="80%">
+                <col width="20%">
+                <tr>
+                    <th scope="col">{% blocktrans %}Project{% endblocktrans %}</th>
+                    <th scope="col">{% blocktrans %}Percent Complete{% endblocktrans %}</th>
+                </tr>
+                {% for k, v in value.items %}
+                    <tr>
+                        <td scope="row">
+                            {{ k.label }}
+                        </td>
+                        <td scope="row">
+                            {{ v|percentage }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            <br>
+        {% endfor %}
+    </body>
+</html>

@@ -997,12 +997,7 @@ def project_tasks_list(request, project_pk):
     project = get_object_or_404(Project, pk=project_pk)
     project_tasks = project.projecttasks_set.all()
     project_tasks_list = project_tasks.filter(archive=False)
-    project_tasks_completed = project_tasks_list.filter(completed=True)
-
-    try:
-        project_task_complete_percent = (project_tasks_completed.count()/project_tasks_list.count())
-    except ZeroDivisionError:
-        project_task_complete_percent = 0
+    project_task_complete_percent = ProjectTasks.get_percentage_complete(project_tasks[0]) if project_tasks_list else None
 
     try:
         Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_VIEW])

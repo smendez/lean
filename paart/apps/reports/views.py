@@ -4,6 +4,7 @@ from __future__ import absolute_import
 
 import datetime
 import pytz
+import collections
 
 from django.conf import global_settings
 from django.shortcuts import render_to_response
@@ -12,13 +13,54 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import PermissionDenied
 
-from projects.models import Project, ProjectInfo, Agency
+from projects.models import Project, ProjectInfo, Agency, ProjectTasks
 
 from acls.models import AccessEntry
 from permissions.models import Permission
 from .permissions import PERMISSION_PROJECT_VIEW
 
 from .forms import AgencySearchForm
+
+
+def agency_project_completion_report(request):
+    pre_object_list = Project.objects.all()
+    completion_report = collections.OrderedDict()
+
+    try:
+        Permission.objects.check_permissions(request.user, [PERMISSION_PROJECT_VIEW])
+    except PermissionDenied:
+        # If user doesn't have global permission, get a list of document
+        # for which he/she does have access use it to filter the
+        # provided object_list
+        final_object_list = AccessEntry.objects.filter_objects_by_access(PERMISSION_PROJECT_VIEW, request.user, pre_object_list)
+    else:
+        final_object_list = pre_object_list
+
+    agencies = Agency.objects.select_related('projects').all().order_by('name').filter(project__pk__in=final_object_list)
+
+    for agency in agencies:
+
+        projects = final_object_list.filter(agency__pk=agency.pk).order_by('label')
+
+        for project in projects:
+            project_pk = project.pk
+            project_tasks = ProjectTasks.objects.filter(project__pk=project_pk)
+        
+            if project_tasks:
+                percentage = project_tasks[0].get_percentage_complete()
+            else:
+                percentage = 0
+
+            if agency in completion_report:
+                completion_report[agency].update({project: percentage})
+            else:
+                completion_report[agency] = {project: percentage}
+
+    context = {
+        'report': completion_report,
+    }
+
+    return render_to_response('report_project_completion.html', context, context_instance=RequestContext(request))
 
 
 def agency_search_report(request):
